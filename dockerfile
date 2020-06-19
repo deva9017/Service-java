@@ -103,8 +103,12 @@ cat >vedikaservice.service <<\'EOF\'
    }
    
    stage('Creating container'){
-  sh label: '', script: '''sudo docker run -it -p 8050:8057 --name jarcontainer service.jar //bin/bash
-sudo docker exec --tty jarcontaineer'''
+  sh label: '', script: '''docker run -it -p 8050:8057 --name jarcontainer service.jar //bin/bash
+docket exec --tty jarcontainer
+echo "alias docker=\'winpty docker\'" >> ~/.bashrc
+echo "alias docker=\'winpty docker\'" >> ~/.bash_profile
+
+'''
   }
    
    stage('java creating'){
