@@ -10,8 +10,7 @@ node{
    } 
    
      stage('Creating Dockerfile'){
-     sh label: '', script: '''cd /var/lib/jenkins/workspace/Docker.pipeline
-     '''
+     sh label: '', script: '''cd /var/lib/jenkins/workspace/Docker.pipeline'''
      sh label: '', script: '''cat >Dockerfile <<\'EOF\'
      FROM ubuntu
      COPY ./build/libs/functionhall-service-0.0.1-SNAPSHOT.jar /home/ubuntu/
@@ -24,8 +23,7 @@ node{
      RUN apt install openjdk-8-jdk -y
      RUN chmod +x /usr/local/bin/vedikaservice.sh
      RUN apt-get install systemd ''
-     EXPOSE 8057
-     '''
+     EXPOSE 8057'''
   }
   stage('Creating vedikaservice.sh'){
 sh label: '', script: '''cd /var/lib/jenkins/workspace/Docker.pipeline/build/libs
@@ -103,16 +101,15 @@ cat >vedikaservice.service <<\'EOF\'
    sh label: '', script: 'cd /home/ubuntu'
    }
    
-   stage('Creating container'){
+  stage('Creating container'){
   sh label: '', script: '''sudo docker run -i -t -d -p 8099:8057 --name jarservice9 serviceimg9 //bin/bash'''
   }
    
-   sstage('starting container'){ 
+  stage('starting container'){ 
   sh label: '', script: '''sudo docker start jarservice9
-  sudo docker exec -i -t -d jarservice9 //bin/bash
-  '''
+  sudo docker exec -i -t -d jarservice9 //bin/bash'''
+  
   }
-   
    stage('starting vedikaservice'){
    sh label: '', script: '''cd /usr/local/bin
    sh vedikaservice.sh start'''
