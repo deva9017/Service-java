@@ -103,18 +103,18 @@ cat >vedikaservice.service <<\'EOF\'
    }
    
    stage('Creating container'){
-  sh label: '', script: '''sudo docker run -i -t -d -p 8045:8057 --name jarservice5 serviceimg5 //bin/bash'''
+  sh label: '', script: '''sudo docker run -i -t -d -p 8036:8057 --name jarservice5 serviceimg5 //bin/bash'''
   }
    
-   stage('java creating'){
-   sh label: '', script: '''apt-get update
-   apt install default-jdk''' 
-   }
-
+   sstage('starting container'){ 
+  sh label: '', script: '''sudo docker start jarcontainer
+  sudo docker exec -i -t -d jarcontainer //bin/bash
+  '''
+  }
+   
    stage('starting vedikaservice'){
    sh label: '', script: '''cd /usr/local/bin
-   chmod +x vedikaservice.sh
-   ./vedikaservice.sh start'''
+   sh vedikaservice.sh start'''
    }
    
    }
