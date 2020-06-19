@@ -1,6 +1,6 @@
 node{
    stage('SCM Checkout'){
-       git credentialsId: 'git-creds', url: 'https://github.com/deva9017/Service-java.git'
+       git credentialsId: 'git-creds', url: 'https://github.com/deva9017/Service-java.git/'
    }
    
    stage('gradle Package'){
@@ -8,25 +8,26 @@ node{
      def gradleCMD = "${gradleHome}/bin/gradle"
      sh "${gradleCMD} clean build"
    } 
-    
-	stage('Creating Dockerfile'){
-sh label: '', script: '''cd /var/lib/jenkins/workspace/Docker.pipeline
-'''
-sh label: '', script: '''cat >Dockerfile <<\'EOF\'
-FROM ubuntu
-COPY ./build/libs/functionhall-service-0.0.1-SNAPSHOT.jar /home/ubuntu/
-CMD sh "apt-get update"
-COPY ./build/libs/vedikaservice.sh /usr/local/bin/
-COPY  ./build/libs/vedikaservice.service /etc/systemd/system/
-WORKDIR /home/ubuntu
-CMD sh "apt install default-jdk"
-CMD sh "chmod +x /usr/local/bin/vedikaservice.sh"
-CMD systemctl daemon-reload
-EXPOSE 8057
-'''
+   
+     stage('Creating Dockerfile'){
+     sh label: '', script: '''cd /var/lib/jenkins/workspace/Docker.pipeline
+     '''
+     sh label: '', script: '''cat >Dockerfile <<\'EOF\'
+     FROM ubuntu
+     COPY ./build/libs/functionhall-service-0.0.1-SNAPSHOT.jar /home/ubuntu/
+     RUN apt-get update
+     COPY ./build/libs/vedikaservice.sh /usr/local/bin/
+     COPY  ./build/libs/vedikaservice.service /etc/systemd/system/
+     WORKDIR /home/ubuntu
+     RUN apt install software-properties-common apt-transport-https -y
+     RUN add-apt-repository ppa:openjdk-r/ppa -y
+     RUN apt install openjdk-8-jdk -y
+     RUN chmod +x /usr/local/bin/vedikaservice.sh
+     RUN apt-get install systemd ''
+     EXPOSE 8057
+     '''
   }
-
-   stage('Creating vedikaservice.sh'){
+  stage('Creating vedikaservice.sh'){
 sh label: '', script: '''cd /var/lib/jenkins/workspace/Docker.pipeline/build/libs
 cat >vedikaservice.sh <<\'EOF\'
 #!/bin/sh 
@@ -95,7 +96,7 @@ cat >vedikaservice.service <<\'EOF\'
    }
    
    stage('Creating Image'){
-   sh label: '', script: 'sudo docker build -t serviceimg8 .'
+   sh label: '', script: 'sudo docker build -t serviceimg9 .'
    }
    
    stage('Back to home/ubuntu'){
@@ -103,12 +104,12 @@ cat >vedikaservice.service <<\'EOF\'
    }
    
    stage('Creating container'){
-  sh label: '', script: '''sudo docker run -i -t -d -p 8094:8057 --name jarservice8 serviceimg8 //bin/bash'''
+  sh label: '', script: '''sudo docker run -i -t -d -p 8099:8057 --name jarservice9 serviceimg9 //bin/bash'''
   }
    
    sstage('starting container'){ 
-  sh label: '', script: '''sudo docker start jarservice8
-  sudo docker exec -i -t -d jarservice8 //bin/bash
+  sh label: '', script: '''sudo docker start jarservice9
+  sudo docker exec -i -t -d jarservice9 //bin/bash
   '''
   }
    
