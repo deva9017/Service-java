@@ -95,7 +95,7 @@ cat >vedikaservice.service <<\'EOF\'
    }
    
    stage('Creating Image'){
-   sh label: '', script: 'sudo docker build -t serviceimage2 .'
+   sh label: '', script: 'sudo docker build -t serviceimg .'
    }
    
    stage('Back to home/ubuntu'){
@@ -103,7 +103,7 @@ cat >vedikaservice.service <<\'EOF\'
    }
    
    stage('Creating container'){
-  sh label: '', script: '''sudo docker run -i -t -d -p 8060:8057 --name servicecontainer2 serviceimage //bin/bash
+  sh label: '', script: '''sudo docker run -i -t -d -p 8090:8057 --name jarservice serviceimg //bin/bash
   sudo docker exec --tty servicecontainer'''
   }
    
