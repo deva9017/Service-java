@@ -1,6 +1,6 @@
 node{
    stage('SCM Checkout'){
-       git credentialsId: 'git-creds', url: 'https://github.com/deva9017/Service-java.git/'
+       git credentialsId: 'git-creds', url: 'https://github.com/shivastunts0327/Service-java.git'
    }
    
    stage('gradle Package'){
@@ -10,7 +10,8 @@ node{
    } 
    
      stage('Creating Dockerfile'){
-     sh label: '', script: '''cd /var/lib/jenkins/workspace/Docker.pipeline'''
+     sh label: '', script: '''cd /var/lib/jenkins/workspace/Docker.pipeline
+     '''
      sh label: '', script: '''cat >Dockerfile <<\'EOF\'
      FROM ubuntu
      COPY ./build/libs/functionhall-service-0.0.1-SNAPSHOT.jar /home/ubuntu/
@@ -23,9 +24,11 @@ node{
      RUN apt install openjdk-8-jdk -y
      RUN chmod +x /usr/local/bin/vedikaservice.sh
      RUN apt-get install systemd ''
-     EXPOSE 8057'''
+     EXPOSE 8057
+     '''
   }
-  stage('Creating vedikaservice.sh'){
+
+   stage('Creating vedikaservice.sh'){
 sh label: '', script: '''cd /var/lib/jenkins/workspace/Docker.pipeline/build/libs
 cat >vedikaservice.sh <<\'EOF\'
 #!/bin/sh 
@@ -94,25 +97,19 @@ cat >vedikaservice.service <<\'EOF\'
    }
    
    stage('Creating Image'){
-   sh label: '', script: 'sudo docker build -t vedikaimage8 .'
+   sh label: '', script: 'sudo docker build -t service.jar .'
    }
    
    stage('Back to home/ubuntu'){
    sh label: '', script: 'cd /home/ubuntu'
-   }
+  }
    
-  stage('Creating container'){
-  sh label: '', script: '''sudo docker run -i -t -d -p 8078:8057 --name vedikacont8 vedikaimage8 //bin/bash'''
+   stage('Creating container'){
+   sh label: '', script: 'sudo docker run -i -t -d -p 8010:8057 --name test service.jar //bin/bash' 
   }
    
   stage('starting container'){ 
-  sh label: '', script: '''sudo docker start vedikacont8
-  sudo docker exec -i -t -d vedikacont8 //bin/bash'''
-  
+  sh label: '', script: 'docker exec test sh /usr/local/bin/vedikaservice.sh  start'
   }
-   stage('starting vedikaservice'){
-   sh label: '', script: '''cd /usr/local/bin
-   sh vedikaservice.sh start'''
-   }
    
-   }
+  }
