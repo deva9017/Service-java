@@ -97,7 +97,7 @@ cat >vedikaservice.service <<\'EOF\'
    }
    
    stage('Creating Image'){
-   sh label: '', script: 'sudo docker build -t vedicsimg .'
+   sh label: '', script: 'sudo docker build -t vedicsimg1 .'
    }
    
    stage('Back to home/ubuntu'){
@@ -105,11 +105,11 @@ cat >vedikaservice.service <<\'EOF\'
   }
    
    stage('Creating container'){
-   sh label: '', script: 'sudo docker run -i -t -d -p 8090:8057 --name vedicscont vedicsimg //bin/bash' 
+   sh label: '', script: 'sudo docker run -i -t -d -p 8050:8057 --name vedicscont1 vedicsimg1 //bin/bash' 
   }
    
   stage('starting container'){ 
-  sh label: '', script: 'docker exec vedicscont sh chmod +x /usr/local/bin/vedikaservice.sh  start'
+  sh label: '', script: 'docker exec vedicscont1 sh chmod +x /usr/local/bin/vedikaservice.sh  start'
   }
    
   }
