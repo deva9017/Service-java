@@ -188,7 +188,7 @@ sudo apt install docker-ce -y'''
    sh label: '', script: '''cd /opt/
 sudo echo "---
 -
-  hosts: 52.66.204.33
+  hosts: 13.232.43.163
   tasks:
     vars:
     ansible_python_interpreter: /usr/bin/python3
