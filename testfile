@@ -131,7 +131,7 @@ sudo echo "---
     -
        shell: sudo docker load -i /home/ubuntu/service.tar
     -
-       shell: sudo docker run -i -t -d -p 8057:8057 --name service.container service //bin/bash" > service.yaml'''
+       shell: sudo docker run -i -t -d -p 8056:8057 --name service.container service //bin/bash" > service.yaml'''
   }
       
       stage('execution playbook'){
