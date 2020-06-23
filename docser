@@ -1,6 +1,6 @@
 node{
    stage('SCM Checkout'){
-       git credentialsId: 'git-creds', url: 'https://github.com/shivastunts0327/Service-java.git'
+       git credentialsId: 'git-creds', url: 'https://github.com/deva9017/Service-java.git'
    }
    
    stage('gradle Package'){
@@ -45,7 +45,7 @@ sudo apt install docker-ce -y'''
   }
 
    stage('Creating vedikaservice.sh'){
-sh label: '', script: '''cd /var/lib/jenkins/workspace/Docker.pipeline/build/libs
+sh label: '', script: '''cd /var/lib/jenkins/workspace/docans/build/libs
 cat >vedikaservice.sh <<\'EOF\'
 #!/bin/sh 
 SERVICE_NAME=vedikaservice 
@@ -91,7 +91,7 @@ restart)
     }
 	
 	stage('Creating vedikaservice.service'){
-sh label: '', script: '''cd /var/lib/jenkins/workspace/Docker.pipeline/build/libs
+sh label: '', script: '''cd /var/lib/jenkins/workspace/docans/build/libs
 cat >vedikaservice.service <<\'EOF\'
 [Unit]
  Description = Java Service
@@ -151,7 +151,7 @@ sudo apt install docker-ce -y'''
    }
    
    stage('Back to workspace'){
-   sh label: '', script: 'cd /var/lib/jenkins/workspace/Docker.pipeline'
+   sh label: '', script: 'cd /var/lib/jenkins/workspace/docans'
    }
    
    stage('Creating Image'){
