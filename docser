@@ -180,7 +180,7 @@ sudo apt install docker-ce -y'''
    sh label: '', script: '''cd /etc/ansible
    cat >hosts <<\'EOF\'
    [hosts]
-   52.66.204.33
+   13.232.43.163
    '''
    }
    
