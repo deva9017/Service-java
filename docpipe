@@ -81,13 +81,13 @@ ENTRYPOINT ["java", "-jar", "functionhall-service-0.0.1-SNAPSHOT.jar"]'''
 }
  
   stage('Creating Image'){
- sh label: '', script: 'sudo docker build -t test1 .'
+ sh label: '', script: 'sudo docker build -t myimg .'
    }
    
    stage('Push Docker Image'){
   withCredentials([usernamePassword(credentialsId: 'dochub-creds', passwordVariable: 'dochub_pwd', usernameVariable: 'dochub_user')]) {
-  sh "sudo docker tag test1 deva9017/testservice"
-  sh "sudo docker push deva9017/testservice"
+  sh "sudo docker tag myimg deva9017/servicejar"
+  sh "sudo docker push deva9017/servicejar"
    }
  }
   
@@ -143,7 +143,7 @@ stage('Back to opt'){
     }
 	
 	stage(' service create for docker swarm '){
-    sh label: '', script: 'sudo docker service create --name servicecont --publish 8017:8057 --replicas 3 deva9017/testservice'
+    sh label: '', script: 'sudo docker service create --name servicecont2 --publish 8017:8057 --replicas 3 deva9017/servicejar'
     }
 	
    }
