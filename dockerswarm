@@ -137,7 +137,7 @@ ENTRYPOINT ["java", "-jar", "functionhall-service-0.0.1-SNAPSHOT.jar"]'''
     }
 	
 	stage(' service create for docker swarm '){
-    sh label: '', script: 'sudo docker service create --name servicecontainer --publish 8057:8057 --replicas 3 service'
+    sh label: '', script: 'sudo docker service create --name servicecontainer --publish 8057:8057 --replicas 3 deva9017/vedikimg'
     }
 	
    }
