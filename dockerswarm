@@ -27,6 +27,7 @@ sudo apt install docker-ce -y'''
    
    stage('script for Docker installation'){
    sh label: '', script: '''cd /opt
+  sudo chmod 777 /opt
 cat >docker.sh <<\'EOF\'
 sudo apt update -y
 sudo apt upgrade -y
