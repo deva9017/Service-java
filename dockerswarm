@@ -80,15 +80,21 @@ EXPOSE 8057
 ENTRYPOINT ["java", "-jar", "functionhall-service-0.0.1-SNAPSHOT.jar"]'''
 }
  
+  stage('Creating Image'){
+ sh label: '', script: 'sudo docker build -t serviceimg .'
+   }
+   
+   stage('Push Docker Image'){
+  
+  withCredentials([string(credentialsId: 'dochub', variable: 'dochubpwd')]) {
+  sh "docker login -u deva9017 -p ${dochubpwd}"
+   }
+  sh "sudo docker tag serviceimg deva9017/serviceimg1"
+  sh "sudo docker push deva9017/serviceimg1"
+   }
  
  
- stage('Dochub Login and creating image')
- withCredentials([usernamePassword(credentialsId: 'dochub-creds', passwordVariable: '', usernameVariable: '')]) 
- {
- sh label: '', script: '''sudo docker build -t serviceimg .
-docker push deva9017/serviceimg'''
- }
-
+ 
 stage('Back to opt'){
  sh label: '', script: '''sudo chmod 777 /opt
  cd /opt'''
