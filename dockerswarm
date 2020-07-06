@@ -147,7 +147,7 @@ stage('Back to opt'){
     }
 	
 	stage(' service create for docker swarm '){
-    sh label: '', script: 'sudo docker service create --name servicecont --publish 8037:8057 --replicas 3 deva9017/serviceimg'
+    sh label: '', script: 'sudo docker service create --name servicecont --publish 8037:8057 --replicas 3 deva9017/serviceimg1'
     }
 	
    }
