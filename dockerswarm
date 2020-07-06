@@ -83,11 +83,16 @@ ENTRYPOINT ["java", "-jar", "functionhall-service-0.0.1-SNAPSHOT.jar"]'''
  
  stage('Creating Image'){
  sh label: '', script: '''sudo docker build -t serviceimg .
-docker push deva9017/serviceimg'''
+'''
+}
  
+ stage('Dochub Login')
+ withCredentials([usernamePassword(credentialsId: 'dochub-creds', passwordVariable: '', usernameVariable: '')]) 
+ {
+    sh label: '', script: 'docker push deva9017/serviceimg'
  }
-   
-  stage('Back to opt'){
+
+stage('Back to opt'){
  sh label: '', script: '''sudo chmod 777 /opt
  cd /opt'''
    }
