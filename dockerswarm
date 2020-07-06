@@ -96,4 +96,4 @@ ENTRYPOINT ["java", "-jar", "functionhall-service-0.0.1-SNAPSHOT.jar"]'''
     }
 	
    }
-   }
+ 
