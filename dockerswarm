@@ -82,8 +82,10 @@ ENTRYPOINT ["java", "-jar", "functionhall-service-0.0.1-SNAPSHOT.jar"]'''
  
  
  stage('Creating Image'){
- sh label: '', script: 'sudo docker build -t service .'
-   }
+ sh label: '', script: '''sudo docker build -t serviceimg .
+docker push deva9017/serviceimg'''
+ 
+ }
    
   stage('Back to opt'){
  sh label: '', script: '''sudo chmod 777 /opt
@@ -137,7 +139,7 @@ ENTRYPOINT ["java", "-jar", "functionhall-service-0.0.1-SNAPSHOT.jar"]'''
     }
 	
 	stage(' service create for docker swarm '){
-    sh label: '', script: 'sudo docker service create --name servicecontainer --publish 8057:8057 --replicas 3 deva9017/vedikimg'
+    sh label: '', script: 'sudo docker service create --name servicecont --publish 8037:8057 --replicas 3 deva9017/serviceimg'
     }
 	
    }
