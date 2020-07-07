@@ -86,7 +86,7 @@ ssh ubuntu@13.233.110.33 sudo swapoff -a'''
  
  
 stage('Docker file'){
-sh label: '', script: '''cd /var/lib/jenkins/workspace/kubernetes'''
+sh label: '', script: '''cd /var/lib/jenkins/workspace/kubernetes
 cat >Dockerfile <<\'EOF\'
 FROM java:8-jdk-alpine
 COPY ./build/libs/functionhall-service-0.0.1-SNAPSHOT.jar /usr/app/
