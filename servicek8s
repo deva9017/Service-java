@@ -31,9 +31,9 @@ sudo apt install docker-ce -y'''
    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
    sudo apt-get update -y
    sudo apt-get install docker-ce -y
-   curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-   sudo echo 'deb http://apt.kubernetes.io/ kubernetes-xenial main' | tee /etc/apt/sources.list.d/kubernetes.list
-   apt-get install kubelet kubeadm kubectl -y'''
+   sudo curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+   sudo echo 'deb http://apt.kubernetes.io/ kubernetes-xenial main' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+   sudo apt-get install kubelet kubeadm kubectl -y'''
    }
    
    stage('script for Docker and kubernetes installation'){
@@ -47,9 +47,9 @@ sudo apt install docker-ce -y'''
    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
    sudo apt-get update -y
    sudo apt-get install docker-ce -y
-   sudo curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-   sudo echo 'deb http://apt.kubernetes.io/ kubernetes-xenial main' | tee /etc/apt/sources.list.d/kubernetes.list
-   apt-get install kubelet kubeadm kubectl -y'''
+   sudo curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+   sudo echo 'deb http://apt.kubernetes.io/ kubernetes-xenial main' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+   sudo apt-get install kubelet kubeadm kubectl -y'''
    }
    
    stage('appending ips to hosts'){
