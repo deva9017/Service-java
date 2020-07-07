@@ -16,7 +16,7 @@ echo Install Prerequisite Packages
 sudo apt-get install curl apt-transport-https ca-certificates software-properties-common -y
 echo Add the Docker Repositories
 echo we add the GPG key, by entering the following command in the command line:
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - 
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - 
 echo Next, we add the repository:
 sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" -y
 echo just update the repository information:
@@ -31,7 +31,7 @@ sudo apt install docker-ce -y'''
    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
    sudo apt-get update -y
    sudo apt-get install docker-ce -y
-   sudo curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+   curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
    sudo echo 'deb http://apt.kubernetes.io/ kubernetes-xenial main' | tee /etc/apt/sources.list.d/kubernetes.list
    apt-get install kubelet kubeadm kubectl -y'''
    }
