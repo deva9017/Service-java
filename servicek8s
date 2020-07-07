@@ -129,10 +129,15 @@ ENTRYPOINT ["java", "-jar", "functionhall-service-0.0.1-SNAPSHOT.jar"]'''
  sh label: '', script: 'sudo kubeadm init --pod-network-cidr=192.168.0.0/16 > kubeadm.txt'
    }
  
+  
  stage('copying the docker swarm token output to a file'){
  sh label: '', script: '''sudo awk 'NR>=66 && NR<=67' kubeadm.txt > kubeadm.sh'''
    }
-   
+ 
+ stage('appending sudo to kubeadm.sh'){
+ sh label: '', script: '''sed 's/kubeadm/sudo kubeadm/' kubeadm.sh'''
+ }
+ 
    stage('copying docker and kubernetes.sh and installing on the Node 1'){
    sh label: '', script: '''
    ssh ubuntu@52.66.205.245 sudo chmod 777 /opt
