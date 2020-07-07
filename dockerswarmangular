@@ -71,7 +71,7 @@ sudo apt install docker-ce -y'''
    }
 
 stage('angular installation file in Docker container'){
-sh label: '', script: '''cd /var/lib/jenkins/workspace/angular/build/libs'''
+sh label: '', script: '''cd /var/lib/jenkins/workspace/angular/build/libs
 cat >angular.sh <<'EOF'
 #!/bin/bash
 sudo apt -y install curl dirmngr apt-transport-https lsb-release ca-certificates
