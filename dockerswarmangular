@@ -72,7 +72,7 @@ sudo apt install docker-ce -y'''
 
 stage('angular installation file in Docker container'){
 sh label: '', script: '''cd /var/lib/jenkins/workspace/angular/build/libs'''
-sh label: '', script: '''cat >angular.sh <<\'EOF\'
+cat >angular.sh <<'EOF'
 #!/bin/bash
 sudo apt -y install curl dirmngr apt-transport-https lsb-release ca-certificates
 sudo curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
@@ -88,7 +88,7 @@ npm install'''
 
 stage('Docker file for angular'){
 sh label: '', script: '''cd /var/lib/jenkins/workspace/angular'''
-sh label: '', script: '''cat >Dockerfile <<\'EOF\'
+cat >Dockerfile <<'EOF'
 FROM ubuntu
 RUN apt-get update
 RUN apt-get install git -y
@@ -98,8 +98,7 @@ RUN chmod +x /opt/angular.sh
 RUN sh /opt/angular.sh
 WORKDIR /opt/vedikaUI-5
 ENTRYPOINT ["ng", "serve", "--host", "0.0.0.0"]'''
-}
- 
+} 
  
  stage('Creating Image'){
  sh label: '', script: 'sudo docker build -t angular .'
