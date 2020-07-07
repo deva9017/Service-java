@@ -101,7 +101,8 @@ ENTRYPOINT ["java", "-jar", "functionhall-service-0.0.1-SNAPSHOT.jar"]'''
    }
    
   stage('Push Docker Image'){
- withCredentials([usernamePassword(credentialsId: 'dochub-creds', passwordVariable: 'dochub-pwd', usernameVariable: 'dochub-user')]) {
+ withCredentials([string(credentialsId: 'dochub', variable: 'dochub')]) {
+  sh "docker login -u deva9017 -p ${dochub}"
   sh "sudo docker tag service deva9017/servicek8s"
   sh "sudo docker push deva9017/servicek8s"
    }
