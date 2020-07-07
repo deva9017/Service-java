@@ -120,9 +120,9 @@ ENTRYPOINT ["java", "-jar", "functionhall-service-0.0.1-SNAPSHOT.jar"]'''
    }
    
    stage('kubeadm  removing in master and nodes'){
- sh label: '', script:'''sudo kubeadm reset remove-etcd-member
- ssh ubuntu@13.127.69.191 sudo kubeadm reset remove-etcd-member
- ssh ubuntu@13.127.69.191 sudo kubeadm reset remove-etcd-member'''
+ sh label: '', script:'''sudo kubeadm reset remove-etcd-member -y
+ ssh ubuntu@13.127.69.191 sudo kubeadm reset remove-etcd-member -y
+ ssh ubuntu@13.127.69.191 sudo kubeadm reset remove-etcd-member -y'''
  }
  
  stage('docker swarm creating'){
