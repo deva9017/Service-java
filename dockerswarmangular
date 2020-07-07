@@ -87,7 +87,7 @@ npm install'''
 }  
 
 stage('Docker file for angular'){
-sh label: '', script: '''cd /var/lib/jenkins/workspace/angular'''
+sh label: '', script: '''cd /var/lib/jenkins/workspace/angular
 cat >Dockerfile <<'EOF'
 FROM ubuntu
 RUN apt-get update
