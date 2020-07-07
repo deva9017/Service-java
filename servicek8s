@@ -1,0 +1,212 @@
+node{
+   stage('SCM Checkout'){
+       git credentialsId: 'git-creds', url: ''
+   }
+   
+   stage('gradle Package'){
+     def gradleHome = tool name: 'gradle', type: 'gradle'
+     def gradleCMD = "${gradleHome}/bin/gradle"
+     sh "${gradleCMD} clean build"
+   } 
+   
+   stage('installing Docker'){
+   sh label: '', script: '''sudo apt update -y
+sudo apt upgrade -y
+echo Install Prerequisite Packages
+sudo apt-get install curl apt-transport-https ca-certificates software-properties-common -y
+echo Add the Docker Repositories
+echo we add the GPG key, by entering the following command in the command line:
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - 
+echo Next, we add the repository:
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" -y
+echo just update the repository information:
+sudo apt update -y
+echo Install Docker on Ubuntu 18.04
+sudo apt install docker-ce -y'''
+   }
+   
+   stage('installing Docker'){
+   sh label: '', script: '''sudo apt-get install apt-transport-https ca-certificates curl software-properties-common -y
+   sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+   sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+   sudo apt-get update -y
+   sudo apt-get install docker-ce -y
+   sudo curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+   sudo echo 'deb http://apt.kubernetes.io/ kubernetes-xenial main' | tee /etc/apt/sources.list.d/kubernetes.list
+   apt-get install kubelet kubeadm kubectl -y'''
+   }
+   
+   stage('script for Docker and kubernetes installation'){
+   sh label: '', script: '''cd /opt
+   sudo chmod 777 /opt
+   cat >docker.sh <<\'EOF\'
+   sudo apt update -y
+   sudo apt upgrade -y
+   sudo apt-get install apt-transport-https ca-certificates curl software-properties-common -y
+   sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+   sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+   sudo apt-get update -y
+   sudo apt-get install docker-ce -y
+   sudo curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+   sudo echo 'deb http://apt.kubernetes.io/ kubernetes-xenial main' | tee /etc/apt/sources.list.d/kubernetes.list
+   apt-get install kubelet kubeadm kubectl -y'''
+   }
+   
+   stage('appending ips to hosts'){
+   sh label: '', script: '''cd /etc/
+    sudo chmod 666 /etc/hosts
+    sudo echo master      13.233.225.43 >> /etc/hosts
+    sudo echo worker 1    52.66.205.245 >> /etc/hosts
+    sudo echo worker 2    13.233.110.33 >> /etc/hosts'''
+   }
+   
+   stage('appending ips to  worker1 node hosts'){
+   sh label: '', script: '''
+    ssh ubuntu@52.66.205.245 sudo chmod 666 /etc/hosts
+    ssh ubuntu@52.66.205.245 "echo master      13.233.225.43 >> /etc/hosts"
+    ssh ubuntu@52.66.205.245 "echo worker 1    52.66.205.245 >> /etc/hosts"
+    ssh ubuntu@52.66.205.245 "echo worker 2    13.233.110.33 >> /etc/hosts"
+   cd /opt'''
+   }
+   
+   stage('appending ips to  worker2 node hosts'){
+   sh label: '', script: '''
+    ssh ubuntu@13.233.110.33 sudo chmod 666 /etc/hosts
+    ssh ubuntu@13.233.110.33 "echo master      13.233.225.43 >> /etc/hosts"
+    ssh ubuntu@13.233.110.33 "echo worker 1    52.66.205.245 >> /etc/hosts"
+    ssh ubuntu@13.233.110.33 "echo worker 2    13.233.110.33 >> /etc/hosts"
+   cd /opt'''
+   }
+
+stage('swapoff for 3 nodes'){
+sh label: '', script: '''sudo swapoff -a
+ssh ubuntu@52.66.205.245 sudo swapoff -a
+ssh ubuntu@13.233.110.33 sudo swapoff -a'''
+}
+ 
+ 
+stage('Docker file'){
+sh label: '', script: '''cd /var/lib/jenkins/workspace/kubernetes'''
+cat >Dockerfile <<\'EOF\'
+FROM java:8-jdk-alpine
+COPY ./build/libs/functionhall-service-0.0.1-SNAPSHOT.jar /usr/app/
+WORKDIR /usr/app
+EXPOSE 8057
+ENTRYPOINT ["java", "-jar", "functionhall-service-0.0.1-SNAPSHOT.jar"]'''
+}
+ 
+ 
+ stage('Creating Image'){
+ sh label: '', script: 'sudo docker build -t service .'
+   }
+   
+  stage('Push Docker Image'){
+  withCredentials([usernamePassword(credentialsId: 'dochub-creds', passwordVariable: 'dochub_pwd', usernameVariable: 'dochub_user')]) {
+  sh "sudo docker tag service deva9017/servicek8s"
+  sh "sudo docker push deva9017/servicek8s"
+   }
+ }
+   
+  stage('Back to opt'){
+ sh label: '', script: '''sudo chmod 777 /opt
+ cd /opt'''
+   }
+   
+ stage('docker swarm creating'){
+ sh label: '', script: 'sudo kubeadm init --pod-network-cidr=192.168.0.0/16 > kubeadm.txt'
+   }
+ 
+ stage('copying the docker swarm token output to a file'){
+ sh label: '', script: '''sudo awk 'NR>=66 && NR<=67' kubeadm.txt > kubeadm.sh'''
+   }
+   
+   stage('copying docker and kubernetes.sh and installing on the Node 1'){
+   sh label: '', script: '''
+   ssh ubuntu@52.66.205.245 sudo chmod 777 /opt
+   scp /opt/docker.sh ubuntu@52.66.205.245:/opt
+   ssh ubuntu@52.66.205.245 sh /opt/docker.sh'''
+   }
+   
+   stage('kubeadm.sh moving to node1'){
+   sh label: '', script: '''
+   ssh ubuntu@52.66.205.245 sudo chmod 777 /opt
+   scp kubeadm.sh.sh ubuntu@52.66.205.245:/opt'''
+   }
+   
+   stage('copying docker and kubernetes.sh and installing on the node2'){
+    sh label: '', script: '''
+    ssh ubuntu@13.233.110.33 sudo chmod 777 /opt
+    scp /opt/docker.sh ubuntu@13.233.110.33:/opt
+    ssh ubuntu@13.233.110.33 sh /opt/docker.sh'''
+   }
+   
+   stage('kubeadm.sh moving to node2'){
+    sh label: '', script: '''
+    ssh ubuntu@13.233.110.33 sudo chmod 777 /opt
+    scp kubeadm.sh ubuntu@13.233.110.33:/opt'''
+   }
+   
+    stage('executing the Node1 kubeadm.sh  '){
+    sh label: '', script: '''
+    ssh ubuntu@52.66.205.245 sudo chmod +x /opt/kubeadm.sh
+    ssh ubuntu@52.66.205.245 sh /opt/kubeadm.sh'''
+	}
+ 
+    stage(' executing the Node2 kubeadm.sh '){
+    sh label: '', script: '''
+    ssh ubuntu@13.233.110.33 sudo chmod +x /opt/kubeadm.sh
+    ssh ubuntu@13.233.110.33 sh /opt/kubeadm.sh'''
+    }
+    
+    stage('Docker compose file for service.jar'){
+    sh label: '', script: '''sudo chmod 777 /opt/'''
+    sh label: '', script: '''cd /opt/'''
+    sh label: '', script: '''cat >servicejarkube.yml <<\'EOF\'
+    apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-deployment
+  labels:
+    app: 
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: service
+  template:
+    metadata:
+      labels:
+        app: service
+    spec:
+      containers:
+      - name: servicekubecontainer
+        image: deva9017/servicek8s
+        ports:
+        - containerPort: 8057'''
+        }
+        
+    stage(' service creating  for kubernetes cluster configuration '){
+    sh label: '', script: 'sudo kubectl apply -f servicejarkube.yml'
+    }
+    
+    stage(' Displaying information about the Deployment of service.jar in kubernetes cluster configuration '){
+    sh label: '', script: 'sudo kubectl get deployments service-deployment '
+    sh label: '', script: 'sudo kubectl describe deployments service-deployment '
+    }
+    
+    stage(' Displaying information about the our ReplicaSet objects of service.jar in kubernetes cluster configuration '){
+    sh label: '', script: 'sudo kubectl get replicasets'
+    sh label: '', script: 'sudo kubectl describe replicasets '
+    }
+         
+    stage(' service creating  for kubernetes cluster configuration '){
+    sh label: '', script: 'sudo kubectl expose deployment service-deployment --type=LoadBalancer --name=servicejar-kubernetes'
+    }
+	
+    stage(' Display detailed information about the Service.jar '){
+    sh label: '', script: 'sudo kubectl get services servicejar-kubernetes'
+    sh label: '', script: 'sudo kubectl describe services servicejar-kubernetes '
+	
+   }
+
+}
