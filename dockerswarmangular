@@ -1,0 +1,149 @@
+node{
+   stage('SCM Checkout'){
+       git credentialsId: 'git-creds', url: 'https://github.com/deva9017/Service-java2.git'
+   }
+   
+   stage('gradle Package'){
+     def gradleHome = tool name: 'gradle', type: 'gradle'
+     def gradleCMD = "${gradleHome}/bin/gradle"
+     sh "${gradleCMD} clean build"
+   } 
+   
+   stage('installing Docker'){
+   sh label: '', script: '''sudo apt update -y
+sudo apt upgrade -y
+echo Install Prerequisite Packages
+sudo apt-get install curl apt-transport-https ca-certificates software-properties-common -y
+echo Add the Docker Repositories
+echo we add the GPG key, by entering the following command in the command line:
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - 
+echo Next, we add the repository:
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" -y
+echo just update the repository information:
+sudo apt update -y
+echo Install Docker on Ubuntu 18.04
+sudo apt install docker-ce -y'''
+   }
+   
+   stage('script for Docker installation'){
+   sh label: '', script: '''cd /opt
+  sudo chmod 777 /opt
+cat >docker.sh <<\'EOF\'
+sudo apt update -y
+sudo apt upgrade -y
+echo Install Prerequisite Packages
+sudo apt-get install curl apt-transport-https ca-certificates software-properties-common -y
+echo Add the Docker Repositories
+echo we add the GPG key, by entering the following command in the command line:
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - 
+echo Next, we add the repository:
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" -y
+echo just update the repository information:
+sudo apt update -y
+echo Install Docker on Ubuntu 18.04
+sudo apt install docker-ce -y'''
+   }
+   
+   stage('appending ips to hosts'){
+   sh label: '', script: '''cd /etc/
+    sudo chmod 666 /etc/hosts
+    sudo echo master      13.232.39.56 >> /etc/hosts
+    sudo echo worker 1    13.234.110.216 >> /etc/hosts
+    sudo echo worker 2    13.127.177.114 >> /etc/hosts'''
+   }
+   
+   stage('appending ips to  worker1 node hosts'){
+   sh label: '', script: '''
+    ssh ubuntu@13.234.110.216 sudo chmod 666 /etc/hosts
+    ssh ubuntu@13.234.110.216 "echo master      13.232.39.56 >> /etc/hosts"
+    ssh ubuntu@13.234.110.216 "echo worker 1    13.234.110.216 >> /etc/hosts"
+    ssh ubuntu@13.234.110.216 "echo worker 2    13.127.177.114 >> /etc/hosts"
+   cd /opt'''
+   }
+   
+   stage('appending ips to  worker2 node hosts'){
+   sh label: '', script: '''
+    ssh ubuntu@13.127.177.114 sudo chmod 666 /etc/hosts
+    ssh ubuntu@13.127.177.114 "echo master      13.232.39.56 >> /etc/hosts"
+    ssh ubuntu@13.127.177.114 "echo worker 1    13.234.110.216 >> /etc/hosts"
+    ssh ubuntu@13.127.177.114 "echo worker 2    13.127.177.114 >> /etc/hosts"
+   cd /opt'''
+   }
+   
+  stage('Docker file'){
+ sh label: '', script: '''cd /var/lib/jenkins/workspace/dockerswarm'''
+sh label: '', script: '''cat >Dockerfile <<\'EOF\'
+FROM java:8-jdk-alpine
+COPY ./build/libs/functionhall-service-0.0.1-SNAPSHOT.jar /usr/app/
+WORKDIR /usr/app
+EXPOSE 8057
+ENTRYPOINT ["java", "-jar", "functionhall-service-0.0.1-SNAPSHOT.jar"]'''
+}
+ 
+  stage('Creating Image'){
+ sh label: '', script: 'sudo docker build -t myimg .'
+   }
+   
+   stage('Push Docker Image'){
+  withCredentials([usernamePassword(credentialsId: 'dochub-creds', passwordVariable: 'dochub_pwd', usernameVariable: 'dochub_user')]) {
+  sh "sudo docker tag myimg deva9017/servicejar"
+  sh "sudo docker push deva9017/servicejar"
+   }
+ }
+  
+stage('Back to opt'){
+ sh label: '', script: '''sudo chmod 777 /opt
+ cd /opt'''
+   }
+   
+ stage('docker swarm creating'){
+ sh label: '', script: 'sudo docker swarm init --advertise-addr 13.232.39.56 > swarm.txt'
+   }
+ 
+ stage('copying the docker swarm token output to a file'){
+ sh label: '', script: '''sudo awk 'NR>=5 && NR<=5' swarm.txt > swarminit.sh'''
+   }
+   
+   stage('copying docker.sh and installing on the Node 1'){
+   sh label: '', script: '''
+   ssh ubuntu@13.234.110.216 sudo chmod 777 /opt
+   scp /opt/docker.sh ubuntu@13.234.110.216:/opt
+   ssh ubuntu@13.234.110.216 sh /opt/docker.sh'''
+   }
+   
+   stage('swarminit moving to node1'){
+   sh label: '', script: '''
+   ssh ubuntu@13.234.110.216 sudo chmod 777 /opt
+   scp swarminit.sh ubuntu@13.234.110.216:/opt'''
+   }
+   
+   stage('copying docker.sh and installing on the node2'){
+    sh label: '', script: '''
+    ssh ubuntu@13.127.177.114 sudo chmod 777 /opt
+    scp /opt/docker.sh ubuntu@13.127.177.114:/opt
+    ssh ubuntu@13.127.177.114 sh /opt/docker.sh'''
+   }
+   
+   stage('swarminit moving to node2'){
+    sh label: '', script: '''
+    ssh ubuntu@13.127.177.114 sudo chmod 777 /opt
+    scp swarminit.sh ubuntu@13.127.177.114:/opt'''
+   }
+   
+    stage('executing the Node1 swarminit.sh  '){
+    sh label: '', script: '''
+    ssh ubuntu@13.234.110.216 sudo chmod +x /opt/swarminit.sh
+    ssh ubuntu@13.234.110.216 sh /opt/swarminit.sh'''
+	}
+ 
+    stage(' executing the Node2 swarminit.sh '){
+    sh label: '', script: '''
+    ssh ubuntu@13.127.177.114 sudo chmod +x /opt/swarminit.sh
+    ssh ubuntu@13.127.177.114 sh /opt/swarminit.sh'''
+    }
+	
+	stage(' service create for docker swarm '){
+    sh label: '', script: 'sudo docker service create --name servicecont2 --publish 8017:8057 --replicas 3 deva9017/servicejar'
+    }
+	
+   }
