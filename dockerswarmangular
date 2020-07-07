@@ -1,6 +1,6 @@
 node{
    stage('SCM Checkout'){
-       git credentialsId: 'git-creds', url: 'https://github.com/deva9017/Service-java2.git'
+       git credentialsId: 'git-creds', url: 'https://github.com/shivastunts0327/Service-java.git'
    }
    
    stage('gradle Package'){
@@ -27,7 +27,7 @@ sudo apt install docker-ce -y'''
    
    stage('script for Docker installation'){
    sh label: '', script: '''cd /opt
-  sudo chmod 777 /opt
+   sudo chmod 777 /opt
 cat >docker.sh <<\'EOF\'
 sudo apt update -y
 sudo apt upgrade -y
@@ -47,57 +47,78 @@ sudo apt install docker-ce -y'''
    stage('appending ips to hosts'){
    sh label: '', script: '''cd /etc/
     sudo chmod 666 /etc/hosts
-    sudo echo master      13.232.39.56 >> /etc/hosts
-    sudo echo worker 1    13.234.110.216 >> /etc/hosts
-    sudo echo worker 2    13.127.177.114 >> /etc/hosts'''
+    sudo echo master      35.154.92.64 >> /etc/hosts
+    sudo echo worker 1    15.206.168.202 >> /etc/hosts
+    sudo echo worker 2    15.206.168.101 >> /etc/hosts'''
    }
    
    stage('appending ips to  worker1 node hosts'){
    sh label: '', script: '''
-    ssh ubuntu@13.234.110.216 sudo chmod 666 /etc/hosts
-    ssh ubuntu@13.234.110.216 "echo master      13.232.39.56 >> /etc/hosts"
-    ssh ubuntu@13.234.110.216 "echo worker 1    13.234.110.216 >> /etc/hosts"
-    ssh ubuntu@13.234.110.216 "echo worker 2    13.127.177.114 >> /etc/hosts"
+    ssh ubuntu@15.206.168.202 sudo chmod 666 /etc/hosts
+    ssh ubuntu@15.206.168.202 "echo master      35.154.92.64 >> /etc/hosts"
+    ssh ubuntu@15.206.168.202 "echo worker 1    15.206.168.202 >> /etc/hosts"
+    ssh ubuntu@15.206.168.202 "echo worker 2    15.206.168.101 >> /etc/hosts"
    cd /opt'''
    }
    
    stage('appending ips to  worker2 node hosts'){
    sh label: '', script: '''
-    ssh ubuntu@13.127.177.114 sudo chmod 666 /etc/hosts
-    ssh ubuntu@13.127.177.114 "echo master      13.232.39.56 >> /etc/hosts"
-    ssh ubuntu@13.127.177.114 "echo worker 1    13.234.110.216 >> /etc/hosts"
-    ssh ubuntu@13.127.177.114 "echo worker 2    13.127.177.114 >> /etc/hosts"
+    ssh ubuntu@15.206.168.101 sudo chmod 666 /etc/hosts
+    ssh ubuntu@15.206.168.101 "echo master      35.154.92.64 >> /etc/hosts"
+    ssh ubuntu@15.206.168.101 "echo worker 1    15.206.168.202 >> /etc/hosts"
+    ssh ubuntu@15.206.168.101 "echo worker 2    15.206.168.101 >> /etc/hosts"
    cd /opt'''
    }
-   
-  stage('Docker file'){
- sh label: '', script: '''cd /var/lib/jenkins/workspace/dockerswarm'''
+
+stage('angular installation file in Docker container'){
+sh label: '', script: '''cd /var/lib/jenkins/workspace/angular/build/libs'''
+sh label: '', script: '''cat >angular.sh <<\'EOF\'
+#!/bin/bash
+sudo apt -y install curl dirmngr apt-transport-https lsb-release ca-certificates
+sudo curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
+sudo apt -y install nodejs
+sudo apt -y  install gcc g++ make
+npm install -g @angular/cli
+cd /opt
+sudo git init
+sudo git clone https://github.com/hussainaiah/vedikaUI-5.git
+cd vedikaUI-5
+npm install'''
+}  
+
+stage('Docker file for angular'){
+sh label: '', script: '''cd /var/lib/jenkins/workspace/angular'''
 sh label: '', script: '''cat >Dockerfile <<\'EOF\'
-FROM java:8-jdk-alpine
-COPY ./build/libs/functionhall-service-0.0.1-SNAPSHOT.jar /usr/app/
-WORKDIR /usr/app
-EXPOSE 8057
-ENTRYPOINT ["java", "-jar", "functionhall-service-0.0.1-SNAPSHOT.jar"]'''
+FROM ubuntu
+RUN apt-get update
+RUN apt-get install git -y
+RUN apt-get install sudo -y
+COPY ./build/libs/angular.sh /opt/
+RUN chmod +x /opt/angular.sh
+RUN sh /opt/angular.sh
+WORKDIR /opt/vedikaUI-5
+ENTRYPOINT ["ng", "serve", "--host", "0.0.0.0"]'''
 }
  
-  stage('Creating Image'){
- sh label: '', script: 'sudo docker build -t myimg .'
+ 
+ stage('Creating Image'){
+ sh label: '', script: 'sudo docker build -t angular .'
    }
    
-   stage('Push Docker Image'){
+    stage('Push Docker Image'){
   withCredentials([usernamePassword(credentialsId: 'dochub-creds', passwordVariable: 'dochub_pwd', usernameVariable: 'dochub_user')]) {
-  sh "sudo docker tag myimg deva9017/servicejar"
-  sh "sudo docker push deva9017/servicejar"
+  sh "sudo docker tag angular deva9017/angularui"
+  sh "sudo docker push deva9017/angularui"
    }
  }
-  
-stage('Back to opt'){
+   
+  stage('Back to opt'){
  sh label: '', script: '''sudo chmod 777 /opt
  cd /opt'''
    }
    
  stage('docker swarm creating'){
- sh label: '', script: 'sudo docker swarm init --advertise-addr 13.232.39.56 > swarm.txt'
+ sh label: '', script: 'sudo docker swarm init --advertise-addr 35.154.92.64 > swarm.txt'
    }
  
  stage('copying the docker swarm token output to a file'){
@@ -106,44 +127,48 @@ stage('Back to opt'){
    
    stage('copying docker.sh and installing on the Node 1'){
    sh label: '', script: '''
-   ssh ubuntu@13.234.110.216 sudo chmod 777 /opt
-   scp /opt/docker.sh ubuntu@13.234.110.216:/opt
-   ssh ubuntu@13.234.110.216 sh /opt/docker.sh'''
+   ssh ubuntu@15.206.168.202 sudo chmod 777 /opt
+   scp /opt/docker.sh ubuntu@15.206.168.202:/opt
+   ssh ubuntu@15.206.168.202 sh /opt/docker.sh'''
    }
    
    stage('swarminit moving to node1'){
    sh label: '', script: '''
-   ssh ubuntu@13.234.110.216 sudo chmod 777 /opt
-   scp swarminit.sh ubuntu@13.234.110.216:/opt'''
+   ssh ubuntu@15.206.168.202 sudo chmod 777 /opt
+   scp swarminit.sh ubuntu@15.206.168.202:/opt'''
    }
    
    stage('copying docker.sh and installing on the node2'){
     sh label: '', script: '''
-    ssh ubuntu@13.127.177.114 sudo chmod 777 /opt
-    scp /opt/docker.sh ubuntu@13.127.177.114:/opt
-    ssh ubuntu@13.127.177.114 sh /opt/docker.sh'''
+    ssh ubuntu@15.206.168.101 sudo chmod 777 /opt
+    scp /opt/docker.sh ubuntu@15.206.168.101:/opt
+    ssh ubuntu@15.206.168.101 sh /opt/docker.sh'''
    }
    
    stage('swarminit moving to node2'){
     sh label: '', script: '''
-    ssh ubuntu@13.127.177.114 sudo chmod 777 /opt
-    scp swarminit.sh ubuntu@13.127.177.114:/opt'''
+    ssh ubuntu@15.206.168.101 sudo chmod 777 /opt
+    scp swarminit.sh ubuntu@15.206.168.101:/opt'''
    }
    
     stage('executing the Node1 swarminit.sh  '){
     sh label: '', script: '''
-    ssh ubuntu@13.234.110.216 sudo chmod +x /opt/swarminit.sh
-    ssh ubuntu@13.234.110.216 sh /opt/swarminit.sh'''
+    ssh ubuntu@15.206.168.202 sudo chmod +x /opt/swarminit.sh
+    ssh ubuntu@15.206.168.202 sh /opt/swarminit.sh'''
 	}
  
     stage(' executing the Node2 swarminit.sh '){
     sh label: '', script: '''
-    ssh ubuntu@13.127.177.114 sudo chmod +x /opt/swarminit.sh
-    ssh ubuntu@13.127.177.114 sh /opt/swarminit.sh'''
+    ssh ubuntu@15.206.168.101 sudo chmod +x /opt/swarminit.sh
+    ssh ubuntu@15.206.168.101 sh /opt/swarminit.sh'''
     }
 	
 	stage(' service create for docker swarm '){
-    sh label: '', script: 'sudo docker service create --name servicecont2 --publish 8017:8057 --replicas 3 deva9017/servicejar'
+    sh label: '', script: 'sudo docker service create --name angularuicontainer --publish 8400:4200 --replicas 3 deva9017/angularui'
     }
+	stage(' service create for docker swarm '){
+    sh label: '', script: 'docker service scale angularuicontainer=3'
 	
    }
+
+}
