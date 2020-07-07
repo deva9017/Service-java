@@ -137,7 +137,7 @@ ENTRYPOINT ["java", "-jar", "functionhall-service-0.0.1-SNAPSHOT.jar"]'''
    stage('copying docker and kubernetes.sh and installing on the node2'){
     sh label: '', script: '''
     ssh ubuntu@13.233.110.33 sudo chmod 777 /opt
-    scp /opt/docker.sh ssh ubuntu@13.233.110.33:/opt
+    scp /opt/docker.sh ubuntu@13.233.110.33:/opt
     ssh ubuntu@13.233.110.33 sh /opt/docker.sh'''
    }
    
