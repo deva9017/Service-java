@@ -225,7 +225,8 @@ spec:
     
      stage('deploy the CNI to your cluster'){
    sh label: '', script: '''sudo kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
-   sudo kubectl apply -f https://docs.projectcalico.org/v2.6/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml'''
+   sudo kubectl apply -f https://docs.projectcalico.org/v2.6/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml
+   kubectl apply -f https://docs.projectcalico.org/v3.9/manifests/calico.yaml'''
   }
  
     stage(' Displaying information about the Deployment of service.jar in kubernetes cluster configuration '){
