@@ -132,10 +132,21 @@ ENTRYPOINT ["java", "-jar", "functionhall-service-0.0.1-SNAPSHOT.jar"]'''
   
  stage('copying the docker swarm token output to a file'){
  sh label: '', script: '''sudo awk 'NR>=66 && NR<=67' kubeadm.txt > kubeadm.sh'''
-   }
+   }  
  
  stage('appending sudo to kubeadm.sh'){
  sh label: '', script: '''sed 's/kubeadm/sudo kubeadm/' kubeadm.sh'''
+ }
+ 
+ stage('configure the kubectl tool on your Master server'){
+ sh label: '', script: '''sudo mkdir -p $HOME/.kube
+ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+ sudo chown $(id -u):$(id -g) $HOME/.kube/config'''
+ }
+   
+ stage('deploy the CNI to your cluster'){
+ sh label: '', script: '''sudo kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+ sudo kubectl apply -f https://docs.projectcalico.org/v2.6/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml'''
  }
  
    stage('copying docker and kubernetes.sh and installing on the Node 1'){
