@@ -179,14 +179,14 @@ ENTRYPOINT ["java", "-jar", "functionhall-service-0.0.1-SNAPSHOT.jar"]'''
     stage('executing the Node1 kubeadm.sh  '){
     sh label: '', script: '''
     ssh ubuntu@52.66.205.245 sudo chmod +x /opt/kubeadm.sh
-    sh sudo sed 's/kubeadm/sudo kubeadm/' kubeadm.sh
+    sudo sed 's/kubeadm/sudo kubeadm/' kubeadm.sh
     ssh ubuntu@52.66.205.245 sh /opt/kubeadm.sh'''
 	}
  
     stage(' executing the Node2 kubeadm.sh '){
     sh label: '', script: '''
     ssh ubuntu@13.233.110.33 sudo chmod +x /opt/kubeadm.sh
-    sh sudo sed 's/kubeadm/sudo kubeadm/' kubeadm.sh
+    sudo sed 's/kubeadm/sudo kubeadm/' kubeadm.sh
     ssh ubuntu@13.233.110.33 sh /opt/kubeadm.sh'''
     }
     
