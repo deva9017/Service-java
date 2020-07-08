@@ -148,7 +148,7 @@ ENTRYPOINT ["java", "-jar", "functionhall-service-0.0.1-SNAPSHOT.jar"]'''
  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
  sudo chown $(id -u):$(id -g) $HOME/.kube/config
  export KUBECONFIG=/etc/kubernetes/kubelet.conf
- export KUBECONFIG=/home/ubuntu/.kube/config'''
+ export KUBECONFIG=/etc/kubernetes/admin.conf'''
  }
    
  //stage('deploy the CNI to your cluster'){
