@@ -1,0 +1,403 @@
+node{
+   stage('SCM Checkout'){
+       git credentialsId: 'git-creds', url: 'https://github.com/deva9017/Service-java2.git'
+   }
+   
+     stage('gradle Package'){
+   def gradleHome = tool name: 'gradle', type: 'gradle'
+     def gradleCMD = "${gradleHome}/bin/gradle"
+     sh "${gradleCMD} clean build" 
+   } 
+   
+   stage('removing docker and kubelet script'){
+    sh label: '', script: '''cd /opt
+   sudo chmod 777 /opt
+   cat >remove.sh <<\'EOF\'
+   #!/bin/bash
+echo y | sudo kubeadm reset remove-etcd-member
+sudo docker stop $(docker ps -a -q)
+sudo docker rm $(docker ps -a -q)
+sudo docker rmi $(docker images -a -q)
+sudo apt purge -y docker-engine docker docker.io docker-ce docker-ce-cli
+sudo apt-get autoremove -y --purge docker-engine docker docker.io docker-ce  
+sudo rm -rf /var/lib/docker /etc/docker
+sudo rm /etc/apparmor.d/docker
+sudo groupdel docker
+sudo rm -rf /var/run/docker.sock
+sudo kubectl delete node --all
+sudo kubeadm reset
+echo y | sudo apt purge kubeadm kubectl kubelet kubernetes-cni kube*   
+echo y |sudo apt autoremove  
+sudo rm -rf ~/.kube'''
+   }
+ 
+ stage('executing removing docer and kubelet script'){
+ sh label: '', script: '''cd /opt
+ sh remove.sh'''
+ }
+ 
+ 
+   stage('removing docer and kubelet'){
+   sh label: '', script: '''scp /opt/remove.sh ubuntu@52.66.205.245:/opt
+     ssh ubuntu@52.66.205.245  sh /opt/remove.sh
+    scp /opt/remove.sh ubuntu@13.233.110.33:/opt  
+     ssh ubuntu@13.233.110.33  sh /opt/remove.sh'''
+    }
+   
+   stage('installing Docker kubernetes'){
+   sh label: '', script: '''cd /opt
+   sudo chmod 777 /opt
+   cat >dockub.sh <<\'EOF\'
+   #!/bin/bash
+sudo apt upgrade -y
+echo Install Prerequisite Packages
+sudo apt-get install curl apt-transport-https ca-certificates software-properties-common -y
+echo Add the Docker Repositories
+echo we add the GPG key, by entering the following command in the command line:
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+echo Next, we add the repository:
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" -y
+echo just update the repository information:
+sudo apt update -y
+echo Install Docker on Ubuntu 18.04
+sudo apt install docker-ce -y
+systemctl start docker
+systemctl enable docker
+echo Download the latest release with the command:
+sudo curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
+echo To install k8 version v1.18.0 on Linux, type:
+sudo curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.18.0/bin/linux/amd64/kubectl
+echo Make the kubectl binary executable.
+sudo chmod +x ./kubectl
+echo Move the binary in to your PATH.
+sudo mv ./kubectl /usr/local/bin/kubectl
+echo Test to ensure the version you installed is up-to-date:
+sudo kubectl version --client
+echo Install using native package management
+sudo apt-get update && sudo apt-get install -y apt-transport-https gnupg2
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+sudo apt-get update
+sudo apt-get install -y kubectl
+echo Add Kubernetes Signing Key
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add
+echo If you get an error that curl is not installed, install it with:
+sudo apt-get install curl
+echo Then repeat the previous command to install the signing keys. Repeat for each server node.
+echo Add Software Repositories
+echo Kubernetes is not included in the default repositories. To add them, enter the following
+sudo apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+echo Kubernetes Installation Tools
+echo Install Kubernetes tools with the command
+sudo apt-get install kubeadm kubelet kubectl -y
+sudo apt-mark hold kubeadm kubelet kubectl
+echo Verify the installation with
+sudo kubeadm version'''
+   }
+   
+   stage('executing Docker and kubernetes installation'){
+   sh label: '', script: '''cd /opt
+    sh dockub.sh'''
+   }
+   
+   stage('script for Docker and kubernetes installation'){
+   sh label: '', script: '''cd /opt
+   sudo chmod 777 /opt
+   cat >docker.sh <<\'EOF\'
+   #!/bin/bash
+sudo apt upgrade -y
+echo Install Prerequisite Packages
+sudo apt-get install curl apt-transport-https ca-certificates software-properties-common -y
+echo Add the Docker Repositories
+echo we add the GPG key, by entering the following command in the command line:
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+echo Next, we add the repository:
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" -y
+echo just update the repository information:
+sudo apt update -y
+echo Install Docker on Ubuntu 18.04
+sudo apt install docker-ce -y
+systemctl start docker
+systemctl enable docker
+echo Download the latest release with the command:
+sudo curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
+echo To install k8 version v1.18.0 on Linux, type:
+sudo curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.18.0/bin/linux/amd64/kubectl
+echo Make the kubectl binary executable.
+sudo chmod +x ./kubectl
+echo Move the binary in to your PATH.
+sudo mv ./kubectl /usr/local/bin/kubectl
+echo Test to ensure the version you installed is up-to-date:
+sudo kubectl version --client
+echo Install using native package management
+sudo apt-get update && sudo apt-get install -y apt-transport-https gnupg2
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+sudo apt-get update
+sudo apt-get install -y kubectl
+echo Add Kubernetes Signing Key
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add
+echo If you get an error that curl is not installed, install it with:
+sudo apt-get install curl
+echo Then repeat the previous command to install the signing keys. Repeat for each server node.
+echo Add Software Repositories
+echo Kubernetes is not included in the default repositories. To add them, enter the following
+sudo apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+echo Kubernetes Installation Tools
+echo Install Kubernetes tools with the command
+sudo apt-get install kubeadm kubelet kubectl -y
+sudo apt-mark hold kubeadm kubelet kubectl
+echo Verify the installation with
+sudo kubeadm version'''
+   }
+ 
+    stage('script for appending ips to Master hosts'){
+    sh label: '', script: '''cd /opt
+   sudo chmod 777 /opt
+   cat >mip.sh <<\'EOF\'
+   #!/bin/bash
+    sudo chmod 666 /etc/hosts
+    sudo echo master      13.233.225.43 >> /etc/hosts
+    sudo echo worker 1    52.66.205.245 >> /etc/hosts
+    sudo echo worker 2    13.233.110.33 >> /etc/hosts'''
+   }
+   
+   stage('appending ips to hosts'){
+    sh label: '', script: '''cd /opt
+      sh mip.sh'''
+    }
+   
+   stage('script for appending ips to  worker1 node hosts'){
+   sh label: '', script: '''cd /opt
+   sudo chmod 777 /opt
+   cat >w1ip.sh <<\'EOF\'
+    ssh ubuntu@52.66.205.245 sudo chmod 666 /etc/hosts
+    ssh ubuntu@52.66.205.245 "echo master      13.233.225.43 >> /etc/hosts"
+    ssh ubuntu@52.66.205.245 "echo worker 1    52.66.205.245 >> /etc/hosts"
+    ssh ubuntu@52.66.205.245 "echo worker 2    13.233.110.33 >> /etc/hosts"
+   cd /opt'''
+   }
+   
+   stage('executing script for appending ips to  w1 hosts'){
+    sh label: '', script: '''cd /opt
+     sh w1ip.sh'''
+    }
+   
+   stage('script for appending ips to  worker2 node hosts'){
+   sh label: '', script: '''cd /opt
+   sudo chmod 777 /opt
+   cat >w2ip.sh <<\'EOF\'
+    ssh ubuntu@13.233.110.33 sudo chmod 666 /etc/hosts
+    ssh ubuntu@13.233.110.33 "echo master      13.233.225.43 >> /etc/hosts"
+    ssh ubuntu@13.233.110.33 "echo worker 1    52.66.205.245 >> /etc/hosts"
+    ssh ubuntu@13.233.110.33 "echo worker 2    13.233.110.33 >> /etc/hosts"
+   cd /opt'''
+   }
+   
+   stage('executing script for appending ips to  w2 hosts'){
+    sh label: '', script: '''cd /opt
+     sh w2ip.sh'''
+    }
+
+
+stage('swapoff for 3 nodes'){
+sh label: '', script: '''sudo swapoff -a
+ssh ubuntu@52.66.205.245 sudo swapoff -a
+ssh ubuntu@13.233.110.33 sudo swapoff -a'''
+}
+ 
+ 
+stage('angular installation file in Docker container'){
+sh label: '', script: '''cd /var/lib/jenkins/workspace/angular.kuberenetes/build/libs
+cat >angular.sh <<'EOF'
+#!/bin/bash
+sudo apt -y install curl dirmngr apt-transport-https lsb-release ca-certificates
+sudo curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
+sudo apt -y install nodejs
+sudo apt -y  install gcc g++ make
+npm install -g @angular/cli
+cd /opt
+sudo git init
+sudo git clone https://github.com/hussainaiah/vedikaUI-5.git
+cd vedikaUI-5
+npm install'''
+}  
+
+stage('Docker file for angular'){
+sh label: '', script: '''cd /var/lib/jenkins/workspace/angular.kuberenetes
+cat >Dockerfile <<'EOF'
+FROM ubuntu
+RUN apt-get update
+RUN apt-get install git -y
+RUN apt-get install sudo -y
+COPY ./build/libs/angular.sh /opt/
+RUN chmod +x /opt/angular.sh
+RUN sh /opt/angular.sh
+WORKDIR /opt/vedikaUI-5
+ENTRYPOINT ["ng", "serve", "--host", "0.0.0.0"]'''
+}
+ 
+ stage('Creating Image'){
+ sh label: '', script: 'sudo docker build -t angular .'
+   }
+ 
+ stage('permissions docker.sock to master and nodes'){
+     sh label: '', script:'''sudo chmod 666 /var/run/docker.sock
+  ssh ubuntu@52.66.205.245 sudo chmod 666 /var/run/docker.sock
+  ssh ubuntu@52.66.205.245 sudo chmod 666 /var/run/docker.sock'''
+ }
+  stage('Push Docker Image'){
+  withCredentials([string(credentialsId: 'dochub', variable: 'dochub')]) {
+  sh "docker login -u deva9017 -p ${dochub}"
+  }
+  sh "sudo docker tag angular deva9017/angulark8s"
+  sh "sudo docker push deva9017/angulark8s" 
+  }
+  
+  stage('Back to opt'){
+ sh label: '', script: '''sudo chmod 777 /opt
+ cd /opt'''
+   }
+   
+ stage('kubeadm reseting script'){
+sh label: '', script: '''cd /opt
+cat >reset.sh <<'EOF'
+sudo kubeadm reset
+sudo systemctl restart kubelet
+echo y | sudo kubeadm reset remove-etcd-member
+ssh ubuntu@52.66.205.245 sudo kubeadm reset
+ssh ubuntu@52.66.205.245 sudo systemctl restart kubelet
+ssh ubuntu@52.66.205.245 echo y | sudo kubeadm reset remove-etcd-member
+ssh ubuntu@13.233.110.33 sudo kubeadm reset
+ssh ubuntu@13.233.110.33 sudo systemctl restart kubelet
+ssh ubuntu@13.233.110.33 echo y | sudo kubeadm reset remove-etcd-member'''
+} 
+
+stage('executing kubeadm resting script'){
+sh label: '', script: '''sh /opt/reset.sh'''
+}
+
+ stage('kubeadm  creating'){
+ sh label: '', script: '''sudo kubeadm init --pod-network-cidr=192.168.0.0/16 > sudokubeadm.txt'''
+   }
+ 
+ stage('copying the kubeadm token output to a file'){
+ sh label: '', script: '''sudo awk 'NR>=66 && NR<=67' sudokubeadm.txt > sudokubeadm.sh'''
+   }
+   
+ stage('appending sudo to sudo kubeadm.sh'){
+ sh label: '', script: '''sudo sed -i '1s/^/sudo /' sudokubeadm.sh'''
+ }
+ 
+ stage('configure the kubectl tool on your Master server'){
+ sh label: '', script: '''sudo mkdir -p $HOME/.kube
+ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+ sudo chown $(id -u):$(id -g) $HOME/.kube/config'''
+ }
+   
+   stage('copying docker and kubernetes.sh and installing on the Node 1'){
+   sh label: '', script: '''ssh ubuntu@52.66.205.245 sudo chmod 777 /opt
+   scp /opt/docker.sh ubuntu@52.66.205.245:/opt
+   ssh ubuntu@52.66.205.245 sh /opt/docker.sh'''
+   }
+   
+   stage('kubeadm.sh moving to node1'){
+   sh label: '', script: '''ssh ubuntu@52.66.205.245 sudo chmod 777 /opt
+   scp sudokubeadm.sh ubuntu@52.66.205.245:/opt'''
+   }
+   
+   stage('copying docker and kubernetes.sh and installing on the node2'){
+    sh label: '', script: '''ssh ubuntu@13.233.110.33 sudo chmod 777 /opt
+    scp /opt/docker.sh ubuntu@13.233.110.33:/opt
+    ssh ubuntu@13.233.110.33 sh /opt/docker.sh'''
+   }
+   
+   stage('kubeadm.sh moving to node2'){
+    sh label: '', script: '''ssh ubuntu@13.233.110.33 sudo chmod 777 /opt
+    scp sudokubeadm.sh ubuntu@13.233.110.33:/opt'''
+   }
+   
+    stage('executing the Node1 sudokubeadm.sh  '){
+    sh label: '', script: '''ssh ubuntu@52.66.205.245 sudo chmod +x /opt/sudokubeadm.sh
+    ssh ubuntu@52.66.205.245 sh /opt/sudokubeadm.sh'''
+	}
+ 
+    stage(' executing the Node2 sudokubeadm.sh '){
+    sh label: '', script: '''ssh ubuntu@13.233.110.33 sudo chmod +x /opt/sudokubeadm.sh
+    ssh ubuntu@13.233.110.33 sh /opt/sudokubeadm.sh'''
+    }
+    
+    stage('Docker compose file for service.jar'){
+    sh label: '', script: '''sudo chmod 777 /opt/
+   cd /opt/
+   cat >angularuikube.yml <<'EOF'
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: angular-deployment
+  labels:
+    app: 
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: angular
+  template:
+    metadata:
+      labels:
+        app: angular
+    spec:
+      containers:
+      - name: angularkubecontainer
+        image: deva9017/angulark8s
+        ports:
+        - containerPort: 4200'''
+        }
+	
+     stage('configure the kubectl tool on your Master server'){
+     sh label: '', script: '''sudo mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+sudo chmod 777 $HOME/.kube/config
+export KUBECONFIG=/etc/kubernetes/kubelet.conf
+export KUBECONFIG=/home/ubuntu/.kube/config'''
+     }
+  
+ stage('fannel cluster'){
+ sh label: '', script: '''cd /opt
+ sudo chmod 777 /opt
+ cat >cluster.sh <<'EOF'
+ sudo kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+ sudo kubectl apply -f https://docs.projectcalico.org/v2.6/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml
+ sudo kubectl apply -f https://docs.projectcalico.org/v3.0/getting-started/kubernetes/installation/hosted/kubeadm/1.7/calico.yaml'''
+ }
+    
+  stage('executing fannel cluster'){
+ sh label: '', script: '''sh /opt/cluster.sh'''
+ }
+    
+    stage(' angular creating  for kubernetes cluster configuration '){
+    sh label: '', script: 'sudo kubectl apply -f /opt/angularuikube.yml'
+    }
+    
+    stage(' Displaying information about the Deployment of angular in kubernetes cluster configuration '){
+    sh label: '', script: 'sudo kubectl get deployments angular-deployment'
+    sh label: '', script: 'sudo kubectl describe deployments angular-deployment'
+    }
+    
+    stage(' Displaying information about the our ReplicaSet objects of angular in kubernetes cluster configuration '){
+    sh label: '', script: 'sudo kubectl get replicasets'
+    sh label: '', script: 'sudo kubectl describe replicasets'
+    }
+         
+    stage(' angular creating  for kubernetes cluster configuration '){
+    sh label: '', script: 'sudo kubectl expose deployment service-deployment --type=LoadBalancer --name=angularui-kubernetes'
+    }
+	
+    stage(' Display detailed information about the angular '){
+    sh label: '', script: 'sudo kubectl get services angularui-kubernetes'
+    sh label: '', script: 'sudo kubectl describe services angularui-kubernetes'
+	
+   }
+
+}
