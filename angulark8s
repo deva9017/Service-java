@@ -208,7 +208,7 @@ ENTRYPOINT ["ng", "serve", "--host", "0.0.0.0"]'''
    }
  
  stage('permissions docker.sock to master and nodes'){
-     sh label: '', script:'''# sudo chmod 666 /var/run/docker.sock
+     sh label: '', script:''' sudo chmod 666 /var/run/docker.sock
   # ssh ubuntu@52.66.205.245 sudo chmod 666 /var/run/docker.sock
   # ssh ubuntu@52.66.205.245 sudo chmod 666 /var/run/docker.sock'''
  }
