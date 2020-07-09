@@ -1,6 +1,6 @@
 node{
    stage('SCM Checkout'){
-       git credentialsId: 'git-creds', url: 'https://github.com/deva9017/Service-java2.git'
+       git credentialsId: 'git-creds', url: 'https://github.com/shivastunts0327/Service-java.git'
    }
    
      stage('gradle Package'){
@@ -35,13 +35,13 @@ rm -Rf /etc/kubernetes/admin.conf $HOME/.kube/config'''
  
  stage('executing removing docer and kubelet script'){
  sh label: '', script: '''cd /opt
-    sh remove.sh'''
+ sh remove.sh'''
  }
  
  
    stage('removing docer and kubelet'){
    sh label: '', script: '''scp /opt/remove.sh ubuntu@52.66.205.245:/opt
-     ssh ubuntu@52.66.205.245  sh /opt/remove.sh
+   ssh ubuntu@52.66.205.245  sh /opt/remove.sh
     scp /opt/remove.sh ubuntu@13.233.110.33:/opt  
      ssh ubuntu@13.233.110.33  sh /opt/remove.sh'''
     }
@@ -118,9 +118,7 @@ sudo apt update -y'''
    stage('executing script for installation docker and kuberenetes to  workers nodes'){
    sh label: '', script: '''cd /opt
    sh dockubnodes.sh'''
-   }
-   
-   
+   } 
  
    stage('script for appending ips to Master hosts'){
     sh label: '', script: '''cd /opt
@@ -133,7 +131,7 @@ sudo apt update -y'''
     sudo echo worker 2    13.233.110.33 >> /etc/hosts'''
    }
    
-   stage('appending ips to hosts'){
+    stage('appending ips to hosts'){
     sh label: '', script: '''cd /opt
       sh mip.sh'''
     }
@@ -263,7 +261,7 @@ sh label: '', script: '''sh /opt/reset.sh'''
    
   stage('script for configure the kubectl tool on your Master server'){
  sh label: '', script: '''sudo sh /opt/kubectltool.sh'''
- 
+ }
  
  stage('copying the kubeadm token output to a file'){
  sh label: '', script: '''sudo awk 'NR>=66 && NR<=67' sudokubeadm.txt > sudokubeadm.sh'''
