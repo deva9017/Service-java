@@ -29,8 +29,8 @@ sudo kubeadm reset
 echo y | sudo apt purge kubeadm kubectl kubelet kubernetes-cni kube*   
 echo y |sudo apt autoremove  
 sudo rm -rf ~/.kube
-rm -Rf $HOME/.kube
-rm -Rf /etc/kubernetes/admin.conf $HOME/.kube/config'''
+sudo rm -Rf $HOME/.kube
+sudo rm -Rf /etc/kubernetes/admin.conf $HOME/.kube/config'''
    }
  
  stage('executing removing docer and kubelet script'){
@@ -330,14 +330,13 @@ spec:
         - containerPort: 4200'''
         }
 	
- // stage('fannel cluster'){
- //sh label: '', script: '''cd /opt
- //sudo chmod 777 /opt
- //cat >cluster.sh <<'EOF'
- //sudo kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
- //sudo kubectl apply -f https://docs.projectcalico.org/v2.6/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml
- //sudo kubectl apply -f https://docs.projectcalico.org/v3.0/getting-started/kubernetes/installation/hosted/kubeadm/1.7/calico.yaml'''
- //}
+  stage('fannel cluster'){
+ sh label: '', script: '''cd /opt
+ sudo chmod 777 /opt
+ cat >cluster.sh <<'EOF'
+ sudo kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+ sudo kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml'''
+ }
     
   stage('executing fannel cluster'){
  sh label: '', script: '''sh /opt/cluster.sh'''
