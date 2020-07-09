@@ -311,24 +311,22 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: angular-deployment
-  labels:
-    app: 
 spec:
-  replicas: 3
   selector:
     matchLabels:
-      app: angular
+      app: angular-deployment
+  replicas: 3
   template:
     metadata:
       labels:
-        app: angular
+        app: angular-deployment
     spec:
-      containers:
-      - name: angularkubecontainer
-        image: deva9017/angulark8s
-        ports:
-        - containerPort: 4200'''
-        }
+     containers:
+     - name: angular-deployment
+       image: "deva9017/angularuikube"
+       ports:
+       - containerPort: 4200'''
+       }
 	
   stage('fannel cluster'){
  sh label: '', script: '''cd /opt
