@@ -1,6 +1,6 @@
 node{
    stage('SCM Checkout'){
-       git credentialsId: 'git-creds', url: 'https://github.com/deva9017/Service-java2.git'
+       git credentialsId: 'git-creds', url: 'https://github.com/shivastunts0327/Service-java.git'
    }
    
      stage('gradle Package'){
@@ -33,7 +33,7 @@ sudo rm -rf ~/.kube'''
  
  stage('executing removing docer and kubelet script'){
  sh label: '', script: '''cd /opt
- sh remove.sh'''
+    sh remove.sh'''
  }
  
  
@@ -95,63 +95,29 @@ echo Verify the installation with
 sudo kubeadm version'''
    }
    
-   stage('executing Docker and kubernetes installation'){
+   stage('executing Docker and kubernetes installation in master'){
    sh label: '', script: '''cd /opt
     sh dockub.sh'''
    }
    
-   stage('script for Docker and kubernetes installation'){
+   stage('script for installation docker and kuberenetes to  workers nodes '){
    sh label: '', script: '''cd /opt
    sudo chmod 777 /opt
-   cat >docker.sh <<\'EOF\'
-   #!/bin/bash
-sudo apt upgrade -y
-echo Install Prerequisite Packages
-sudo apt-get install curl apt-transport-https ca-certificates software-properties-common -y
-echo Add the Docker Repositories
-echo we add the GPG key, by entering the following command in the command line:
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-echo Next, we add the repository:
-sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" -y
-echo just update the repository information:
-sudo apt update -y
-echo Install Docker on Ubuntu 18.04
-sudo apt install docker-ce -y
-systemctl start docker
-systemctl enable docker
-echo Download the latest release with the command:
-sudo curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
-echo To install k8 version v1.18.0 on Linux, type:
-sudo curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.18.0/bin/linux/amd64/kubectl
-echo Make the kubectl binary executable.
-sudo chmod +x ./kubectl
-echo Move the binary in to your PATH.
-sudo mv ./kubectl /usr/local/bin/kubectl
-echo Test to ensure the version you installed is up-to-date:
-sudo kubectl version --client
-echo Install using native package management
-sudo apt-get update && sudo apt-get install -y apt-transport-https gnupg2
-curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
-sudo apt-get update
-sudo apt-get install -y kubectl
-echo Add Kubernetes Signing Key
-curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add
-echo If you get an error that curl is not installed, install it with:
-sudo apt-get install curl
-echo Then repeat the previous command to install the signing keys. Repeat for each server node.
-echo Add Software Repositories
-echo Kubernetes is not included in the default repositories. To add them, enter the following
-sudo apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
-echo Kubernetes Installation Tools
-echo Install Kubernetes tools with the command
-sudo apt-get install kubeadm kubelet kubectl -y
-sudo apt-mark hold kubeadm kubelet kubectl
-echo Verify the installation with
-sudo kubeadm version'''
+   cat >dockubnodes.sh <<\'EOF\'
+   scp /opt/dockub.sh ubuntu@52.66.205.245:/opt
+   scp /opt/dockub.sh ubuntu@13.233.110.33:/opt 
+    ssh ubuntu@52.66.205.245 sh /opt/dockub.sh
+    ssh ubuntu@13.233.110.33 sh /opt/dockub.sh'''
    }
+   
+   stage('executing script for installation docker and kuberenetes to  workers nodes'){
+   sh label: '', script: '''cd /opt
+   sh dockubnodes.sh'''
+   }
+   
+   
  
-    stage('script for appending ips to Master hosts'){
+   stage('script for appending ips to Master hosts'){
     sh label: '', script: '''cd /opt
    sudo chmod 777 /opt
    cat >mip.sh <<\'EOF\'
@@ -242,9 +208,9 @@ ENTRYPOINT ["ng", "serve", "--host", "0.0.0.0"]'''
    }
  
  stage('permissions docker.sock to master and nodes'){
-     sh label: '', script:'''sudo chmod 666 /var/run/docker.sock
-  ssh ubuntu@52.66.205.245 sudo chmod 666 /var/run/docker.sock
-  ssh ubuntu@52.66.205.245 sudo chmod 666 /var/run/docker.sock'''
+     sh label: '', script:'''# sudo chmod 666 /var/run/docker.sock
+  # ssh ubuntu@52.66.205.245 sudo chmod 666 /var/run/docker.sock
+  # ssh ubuntu@52.66.205.245 sudo chmod 666 /var/run/docker.sock'''
  }
   stage('Push Docker Image'){
   withCredentials([string(credentialsId: 'dochub', variable: 'dochub')]) {
@@ -253,7 +219,7 @@ ENTRYPOINT ["ng", "serve", "--host", "0.0.0.0"]'''
   sh "sudo docker tag angular deva9017/angulark8s"
   sh "sudo docker push deva9017/angulark8s" 
   }
-  
+   
   stage('Back to opt'){
  sh label: '', script: '''sudo chmod 777 /opt
  cd /opt'''
@@ -331,7 +297,7 @@ sh label: '', script: '''sh /opt/reset.sh'''
     sh label: '', script: '''sudo chmod 777 /opt/
    cd /opt/
    cat >angularuikube.yml <<'EOF'
-apiVersion: apps/v1
+    apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: angular-deployment
