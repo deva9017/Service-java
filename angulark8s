@@ -1,6 +1,6 @@
 node{
    stage('SCM Checkout'){
-       git credentialsId: 'git-creds', url: 'https://github.com/shivastunts0327/Service-java.git'
+       git credentialsId: 'git-creds', url: 'https://github.com/deva9017/Service-java2.git'
    }
    
      stage('gradle Package'){
@@ -28,7 +28,9 @@ sudo kubectl delete node --all
 sudo kubeadm reset
 echo y | sudo apt purge kubeadm kubectl kubelet kubernetes-cni kube*   
 echo y |sudo apt autoremove  
-sudo rm -rf ~/.kube'''
+sudo rm -rf ~/.kube
+rm -Rf $HOME/.kube
+rm -Rf /etc/kubernetes/admin.conf $HOME/.kube/config'''
    }
  
  stage('executing removing docer and kubelet script'){
@@ -49,6 +51,7 @@ sudo rm -rf ~/.kube'''
    sudo chmod 777 /opt
    cat >dockub.sh <<\'EOF\'
    #!/bin/bash
+sudo apt update -y
 sudo apt upgrade -y
 echo Install Prerequisite Packages
 sudo apt-get install curl apt-transport-https ca-certificates software-properties-common -y
@@ -92,7 +95,9 @@ echo Install Kubernetes tools with the command
 sudo apt-get install kubeadm kubelet kubectl -y
 sudo apt-mark hold kubeadm kubelet kubectl
 echo Verify the installation with
-sudo kubeadm version'''
+sudo kubeadm version
+sudo apt upgrade -y
+sudo apt update -y'''
    }
    
    stage('executing Docker and kubernetes installation in master'){
@@ -247,6 +252,19 @@ sh label: '', script: '''sh /opt/reset.sh'''
  sh label: '', script: '''sudo kubeadm init --pod-network-cidr=192.168.0.0/16 > sudokubeadm.txt'''
    }
  
+ stage('script for configure the kubectl tool on your Master server'){
+ sh label: '', script: '''sudo chmod 777 /opt/
+ cd /opt/
+ cat >kubectltool.sh <<'EOF'
+ sudo mkdir -p $HOME/.kube
+ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+ sudo chown $(id -u):$(id -g) $HOME/.kube/config'''
+ }
+   
+  stage('script for configure the kubectl tool on your Master server'){
+ sh label: '', script: '''sudo sh /opt/kubectltool.sh'''
+ 
+ 
  stage('copying the kubeadm token output to a file'){
  sh label: '', script: '''sudo awk 'NR>=66 && NR<=67' sudokubeadm.txt > sudokubeadm.sh'''
    }
@@ -255,12 +273,6 @@ sh label: '', script: '''sh /opt/reset.sh'''
  sh label: '', script: '''sudo sed -i '1s/^/sudo /' sudokubeadm.sh'''
  }
  
- stage('configure the kubectl tool on your Master server'){
- sh label: '', script: '''sudo mkdir -p $HOME/.kube
- sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
- sudo chown $(id -u):$(id -g) $HOME/.kube/config'''
- }
-   
    stage('copying docker and kubernetes.sh and installing on the Node 1'){
    sh label: '', script: '''ssh ubuntu@52.66.205.245 sudo chmod 777 /opt
    scp /opt/docker.sh ubuntu@52.66.205.245:/opt
@@ -297,7 +309,7 @@ sh label: '', script: '''sh /opt/reset.sh'''
     sh label: '', script: '''sudo chmod 777 /opt/
    cd /opt/
    cat >angularuikube.yml <<'EOF'
-    apiVersion: apps/v1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: angular-deployment
@@ -320,16 +332,7 @@ spec:
         - containerPort: 4200'''
         }
 	
-     stage('configure the kubectl tool on your Master server'){
-     sh label: '', script: '''sudo mkdir -p $HOME/.kube
-sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-sudo chown $(id -u):$(id -g) $HOME/.kube/config
-sudo chmod 777 $HOME/.kube/config
-export KUBECONFIG=/etc/kubernetes/kubelet.conf
-export KUBECONFIG=/home/ubuntu/.kube/config'''
-     }
-  
- stage('fannel cluster'){
+  stage('fannel cluster'){
  sh label: '', script: '''cd /opt
  sudo chmod 777 /opt
  cat >cluster.sh <<'EOF'
@@ -363,7 +366,6 @@ export KUBECONFIG=/home/ubuntu/.kube/config'''
     stage(' Display detailed information about the angular '){
     sh label: '', script: 'sudo kubectl get services angularui-kubernetes'
     sh label: '', script: 'sudo kubectl describe services angularui-kubernetes'
-	
-   }
+    }
 
 }
