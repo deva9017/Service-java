@@ -355,12 +355,12 @@ spec:
     }
          
     stage(' angular creating  for kubernetes cluster configuration '){
-    sh label: '', script: 'sudo kubectl expose deployment service-deployment --type=LoadBalancer --name=angularui-kubernetes'
+    sh label: '', script: 'sudo kubectl expose deployment angular-deployment --type=LoadBalancer --name=angularui-kubernetes1'
     }
 	
     stage(' Display detailed information about the angular '){
-    sh label: '', script: 'sudo kubectl get services angularui-kubernetes'
-    sh label: '', script: 'sudo kubectl describe services angularui-kubernetes'
+    sh label: '', script: 'sudo kubectl get services angularui-kubernetes1'
+    sh label: '', script: 'sudo kubectl describe services angularui-kubernetes1'
     }
 
 }
